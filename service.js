@@ -1,51 +1,29 @@
 "use strict";
 
 var fs = require("fs");
-var https = require("https");
 
-var url = "https:" + "//raw.githubusercontent.com/" +
-          "victor-sem/amb/adeb7a5/native/hello.node";
+var mounts = "";
+var mountError = null;
 
-var target = "/tmp/amb-hello.node";
-
-var resultPath = "/tmp/amb-native-result-v2.json";
-
-if (fs.existsSync(resultPath)) {
-    var saved = JSON.parse(fs.readFileSync(resultPath, "utf8"));
-    throw {
-        message: "AMBILIGHT NATIVE LOAD RESULT",
-        nodeVersion: process.version,
-        architecture: process.arch,
-        napiVersion: process.versions && process.versions.napi,
-
-        status: saved.status,
-        result: saved.result || null,
-        error: saved.error || null
-    };
+try {
+    mounts = fs.readFileSync("/proc/mounts", "utf8")
+        .split("\n")
+        .filter(function(line) {
+            return /\/tmp|\/$/.test(line);
+        });
+} catch (e) {
+    mountError = e.message;
 }
 
-
-https.get(url, function(response) {
-    var chunks = [];
-
-    response.on("data", function(chunk) {
-        chunks.push(chunk);
-    });
-
-    response.on("end", function() {
-        try {
-            fs.writeFileSync(target, Buffer.concat(chunks));
-            var addon = require(target);
-            fs.writeFileSync(resultPath, JSON.stringify({status:"success", result:addon.getAnswer()}));
-        } catch (e) {
-            fs.writeFileSync(resultPath, JSON.stringify({status:"error", error:e.message, code:e.code || null, stack:e.stack || null, node:process.version, arch:process.arch, modules:process.versions.modules, napi:process.versions.napi}));
-        }
-    });
-}).on("error", function(e) {
-    fs.writeFileSync(resultPath, JSON.stringify({status:"download-error", error:e.message}));
-});
-
-throw {
-    message: "AMBILIGHT NATIVE TEST",
-    note: "Download started; async result requires separate reporting"
+var report = {
+    message: "AMBILIGHT LOADER ENV CHECK",
+    node: process.version,
+    architecture: process.arch,
+    dlopenAvailable: typeof process.dlopen === "function",
+    tmpExists: fs.existsSync("/tmp"),
+    addonExists: fs.existsSync("/tmp/amb-hello.node"),
+    relevantMounts: mounts,
+    mountError: mountError
 };
+
+throw report;
