@@ -1,23 +1,28 @@
 "use strict";
 
 var fs = require("fs");
-var dirs = ["/usr/lib", "/usr/lib64", "/lib"];
-var pattern = /video|display|screen|capture|pixel|color|picture|frame|render|graphics|mali|drm/i;
+var path = "/usr/lib/libdisplay-capture-api.so.0";
 
-var results = dirs.map(function(dir) {
-    try {
-        return {
-            directory: dir,
-            libraries: fs.readdirSync(dir)
-                .filter(function(name) { return pattern.test(name); })
-                .slice(0, 100)
-        };
-    } catch (e) {
-        return { directory: dir, error: e.code || e.message };
+try {
+    var data = fs.readFileSync(path);
+    var strings = data.toString("latin1")
+        .match(/[\x20-\x7e]{5,}/g) || [];
+
+    var matches = strings.filter(function(s) {
+        return /capture|screen|display|frame|pixel|buffer|image|snapshot/i.test(s);
+    }).slice(0, 60);
+
+    throw {
+        message: "AMBILIGHT DISPLAY CAPTURE INSPECTION",
+        librarySize: data.length,
+        matches: matches
+    };
+} catch (e) {
+    if (e.message === "AMBILIGHT DISPLAY CAPTURE INSPECTION") {
+        throw e;
     }
-});
-
-throw {
-    message: "AMBILIGHT VIDEO LIBRARY DISCOVERY",
-    results: results
-};
+    throw {
+        message: "AMBILIGHT CAPTURE READ ERROR",
+        error: e.code || e.message
+    };
+}
