@@ -1,11 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Ambilight Diagnostics</title>
+<meta charset="UTF-8">
+<title>Ambilight Diagnostics</title>
 </head>
-<body style="background:#111;color:white;font-family:sans-serif;padding:40px">
-    <h1>Ambilight Diagnostics</h1>
-    <p>Проверка библиотеки выполняется отдельным сервисом TizenBrew.</p>
+<body style="background:#111;color:#fff;font:26px sans-serif;padding:40px">
+<h2>Ambilight Diagnostics</h2>
+<pre id="result" style="white-space:pre-wrap">Connecting...</pre>
+<script>
+var output = document.getElementById("result");
+var ws = new WebSocket("ws://localhost:8081");
+
+ws.onopen = function() {
+    output.textContent = "Connected. Requesting service status...";
+    ws.send(JSON.stringify({type:7}));
+};
+
+ws.onmessage = function(event) {
+    try {
+        var data = JSON.parse(event.data);
+        if (data.type === 7) {
+            output.textContent = JSON.stringify(data.payload, null, 2);
+        }
+    } catch (e) {
+        output.textContent = "Parse error: " + e.message;
+    }
+};
+
+ws.onerror = function() {
+    output.textContent = "WebSocket connection error";
+};
+</script>
 </body>
 </html>
