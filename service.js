@@ -2,46 +2,44 @@
 
 var fs = require("fs");
 
-var paths = [
-    "/dev/fb0",
-    "/dev/graphics/fb0",
-    "/dev/dri/card0",
-    "/dev/dri/renderD128",
-    "/dev/video0",
-    "/dev/disp",
-    "/dev/mem"
-];
-
 var report = {
-    message: "AMBILIGHT FRAMEBUFFER ACCESS CHECK",
-    node: process.version,
-    architecture: process.arch,
-    devices: {}
+    message: "AMBILIGHT FRAMEBUFFER READ TEST",
+    path: "/dev/fb0",
+    opened: false,
+    bytesRead: 0,
+    hex: null,
+    error: null
 };
 
-paths.forEach(function(path) {
-    var item = {
-        exists: fs.existsSync(path),
-        readable: false,
-        writable: false,
-        error: null
+var fd = null;
+
+try {
+    fd = fs.openSync(
+        "/dev/fb0",
+        fs.constants.O_RDONLY | fs.constants.O_NONBLOCK
+    );
+
+    report.opened = true;
+
+    var buffer = Buffer.alloc(64);
+
+    report.bytesRead = fs.readSync(
+        fd, buffer, 0, buffer.length, 0
+    );
+
+    report.hex = buffer
+        .subarray(0, report.bytesRead)
+        .toString("hex");
+
+} catch (e) {
+    report.error = {
+        code: e.code,
+        message: e.message
     };
-
-    if (item.exists) {
-        try {
-            fs.accessSync(path, fs.constants.R_OK);
-            item.readable = true;
-        } catch (e) {
-            item.error = e.message;
-        }
-
-        try {
-            fs.accessSync(path, fs.constants.W_OK);
-            item.writable = true;
-        } catch (e) {}
+} finally {
+    if (fd !== null) {
+        fs.closeSync(fd);
     }
-
-    report.devices[path] = item;
-});
+}
 
 throw report;
