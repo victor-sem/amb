@@ -1,29 +1,36 @@
 "use strict";
 
-var cp = require("child_process");
+var fs = require("fs");
+var path = "/usr/lib/libvideoenhance.so";
 
-var commands = [
-    "command -v readelf",
-    "command -v nm",
-    "command -v objdump",
-    "command -v python3"
+var symbols = [
+    "cs_ve_get_rgb_measure_condition",
+    "cs_ve_set_rgb_measure_position",
+    "cs_ve_get_rgb_measure_pixel"
 ];
 
-var results = commands.map(function(cmd) {
-    try {
-        return {
-            command: cmd,
-            result: cp.execSync(cmd, { timeout: 3000 }).toString().trim()
-        };
-    } catch (e) {
-        return {
-            command: cmd,
-            error: e.message
-        };
-    }
-});
+try {
+    var stat = fs.statSync(path);
+    var data = fs.readFileSync(path);
 
-throw {
-    message: "AMBILIGHT TOOLS CHECK",
-    results: results
-};
+    throw {
+        message: "AMBILIGHT RGB SYMBOL CHECK",
+        librarySize: stat.size,
+        results: symbols.map(function(name) {
+            return {
+                symbol: name,
+                found: data.indexOf(Buffer.from(name)) !== -1
+            };
+        })
+    };
+} catch (e) {
+    if (e.message === "AMBILIGHT RGB SYMBOL CHECK") {
+        throw e;
+    }
+
+    throw {
+        message: "LIBRARY READ ERROR",
+        code: e.code || null,
+        error: String(e.message || e)
+    };
+}
