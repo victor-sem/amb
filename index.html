@@ -3,33 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <title>Ambilight Diagnostics</title>
+<style>
+body { background:#111; color:white; font:24px sans-serif; padding:35px; }
+button { font-size:25px; padding:18px; margin:10px 0; }
+pre { white-space:pre-wrap; font-size:21px; }
+</style>
 </head>
-<body style="background:#111;color:#fff;font:26px sans-serif;padding:40px">
+<body>
 <h2>Ambilight Diagnostics</h2>
-<pre id="result" style="white-space:pre-wrap">Connecting...</pre>
+<button onclick="runProbe()">Run diagnostics</button>
+<pre id="result">Connecting...</pre>
 <script>
 var output = document.getElementById("result");
-var ws = new WebSocket("ws://localhost:8081");
+var ws;
+var moduleName = "gh/victor-sem/amb";
 
-ws.onopen = function() {
-    output.textContent = "Connected. Requesting service status...";
-    ws.send(JSON.stringify({type:7}));
-};
+function connect() {
+    ws = new WebSocket("ws://localhost:8081");
 
-ws.onmessage = function(event) {
-    try {
+    ws.onopen = function() {
+        output.textContent = "Connected. Ready.";
+        getStatus();
+    };
+
+    ws.onmessage = function(event) {
         var data = JSON.parse(event.data);
         if (data.type === 7) {
             output.textContent = JSON.stringify(data.payload, null, 2);
         }
-    } catch (e) {
-        output.textContent = "Parse error: " + e.message;
-    }
-};
+    };
 
-ws.onerror = function() {
-    output.textContent = "WebSocket connection error";
-};
+    ws.onerror = function() {
+        output.textContent = "Connection error";
+    };
+}
+
+function getStatus() {
+    ws.send(JSON.stringify({type:7}));
+}
+
+function runProbe() {
+    output.textContent = "Running diagnostics...";
+    ws.send(JSON.stringify({
+        type:6,
+        payload:{
+            fullName:moduleName,
+            serviceFile:"service.js"
+        }
+    }));
+    setTimeout(getStatus, 2500);
+}
+
+connect();
 </script>
 </body>
 </html>
