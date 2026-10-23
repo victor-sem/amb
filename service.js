@@ -14,6 +14,10 @@ if (fs.existsSync(resultPath)) {
     var saved = JSON.parse(fs.readFileSync(resultPath, "utf8"));
     throw {
         message: "AMBILIGHT NATIVE LOAD RESULT",
+        nodeVersion: process.version,
+        architecture: process.arch,
+        napiVersion: process.versions && process.versions.napi,
+
         status: saved.status,
         result: saved.result || null,
         error: saved.error || null
