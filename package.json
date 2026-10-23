@@ -1,0 +1,9 @@
+{
+  "name": "tizen-ambilight-probe",
+  "version": "0.1.0",
+  "appName": "Ambilight Diagnostics",
+  "description": "Read-only Samsung Tizen diagnostics",
+  "packageType": "app",
+  "appPath": "index.html",
+  "serviceFile": "service.js"
+}
