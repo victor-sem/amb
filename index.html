@@ -44,14 +44,20 @@ function getStatus() {
 
 function runProbe() {
     output.textContent = "Running diagnostics...";
-    ws.send(JSON.stringify({
+    fetch("https://api.github.com/repos/victor-sem/amb/commits/main")
+    .then(function(r) { return r.json(); })
+    .then(function(commit) {
+        ws.send(JSON.stringify({
         type:6,
         payload:{
-            fullName:moduleName,
+            fullName:moduleName + "@" + commit.sha,
             serviceFile:"service.js"
         }
     }));
-    setTimeout(getStatus, 2500);
+        setTimeout(getStatus, 3000);
+    }).catch(function(e) {
+        output.textContent = "GitHub error: " + e.message;
+    });
 }
 
 connect();
