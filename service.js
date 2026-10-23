@@ -21,11 +21,7 @@ https.get(url, function (response) {
       fs.writeFileSync(target, Buffer.concat(chunks));
       const addon = require(target);
 
-      throw {
-        message: "AMBILIGHT NATIVE TEST",
-        result: addon.getAnswer(),
-        path: target
-      };
+      console.log("AMBILIGHT NATIVE SUCCESS: " + addon.getAnswer());
     } catch (err) {
       throw {
         message: "AMBILIGHT NATIVE TEST",
