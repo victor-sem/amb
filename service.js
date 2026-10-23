@@ -3,34 +3,45 @@
 var fs = require("fs");
 
 var paths = [
-    "/usr/lib/libefl-util.so",
-    "/usr/lib/libtbm.so",
-    "/usr/lib/libcapi-system-info.so",
-    "/usr/lib/libdlog.so",
-    "/usr/lib/libnode.so"
+    "/dev/fb0",
+    "/dev/graphics/fb0",
+    "/dev/dri/card0",
+    "/dev/dri/renderD128",
+    "/dev/video0",
+    "/dev/disp",
+    "/dev/mem"
 ];
 
 var report = {
-    message: "AMBILIGHT SCREEN CAPTURE CAPABILITY CHECK",
+    message: "AMBILIGHT FRAMEBUFFER ACCESS CHECK",
     node: process.version,
     architecture: process.arch,
-    executable: process.execPath,
-    libraries: {},
-    loadedCaptureLibraries: []
+    devices: {}
 };
 
 paths.forEach(function(path) {
-    report.libraries[path] = fs.existsSync(path);
-});
+    var item = {
+        exists: fs.existsSync(path),
+        readable: false,
+        writable: false,
+        error: null
+    };
 
-try {
-    report.loadedCaptureLibraries = fs.readFileSync(
-        "/proc/self/maps", "utf8"
-    ).split("\n").filter(function(line) {
-        return /efl-util|libtbm|screenshot|screen.?capture|libnode\.so|libuv\.so/i.test(line);
-    }).slice(0, 30);
-} catch (e) {
-    report.mapsError = e.message;
-}
+    if (item.exists) {
+        try {
+            fs.accessSync(path, fs.constants.R_OK);
+            item.readable = true;
+        } catch (e) {
+            item.error = e.message;
+        }
+
+        try {
+            fs.accessSync(path, fs.constants.W_OK);
+            item.writable = true;
+        } catch (e) {}
+    }
+
+    report.devices[path] = item;
+});
 
 throw report;
