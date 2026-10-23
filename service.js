@@ -2,38 +2,44 @@
 
 const fs = require("fs");
 const https = require("https");
-const path = require("path");
 
-const url = "https:" + "//raw.githubusercontent.com/victor-sem/amb/adeb7a5/native/hello.node";
-const target = path.join("/tmp", "amb-hello.node");
+const url = "https://raw.githubusercontent.com/victor-sem/amb/adeb7a5/native/hello.node";
+const target = "/tmp/amb-hello.node";
 
-https.get(url, function (response) {
+const report = {
+  message: "AMBILIGHT NATIVE LOAD TEST",
+  stage: "starting",
+  result: null
+};
+
+https.get(url, response => {
   if (response.statusCode !== 200) {
+    report.stage = "download";
+    report.result = "HTTP " + response.statusCode;
     response.resume();
-    throw new Error("Download HTTP " + response.statusCode);
+    return;
   }
 
   const chunks = [];
   response.on("data", chunk => chunks.push(chunk));
 
-  response.on("end", function () {
+  response.on("end", () => {
     try {
       fs.writeFileSync(target, Buffer.concat(chunks));
+      report.stage = "loading";
       const addon = require(target);
-
-      console.log("AMBILIGHT NATIVE SUCCESS: " + addon.getAnswer());
-    } catch (err) {
-      throw {
-        message: "AMBILIGHT NATIVE TEST",
-        result: err.message || String(err),
-        code: err.code || null,
-        path: target
-      };
+      report.stage = "success";
+      report.result = addon.getAnswer();
+    } catch (e) {
+      report.stage = "error";
+      report.result = e.message;
     }
   });
-}).on("error", function (err) {
-  throw {
-    message: "AMBILIGHT DOWNLOAD ERROR",
-    error: err.message
-  };
+}).on("error", e => {
+  report.stage = "download error";
+  report.result = e.message;
 });
+
+setTimeout(() => {
+  throw report;
+}, 5000);
