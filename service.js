@@ -8,7 +8,7 @@ var url = "https:" + "//raw.githubusercontent.com/" +
 
 var target = "/tmp/amb-hello.node";
 
-var resultPath = "/tmp/amb-native-result.json";
+var resultPath = "/tmp/amb-native-result-v2.json";
 
 if (fs.existsSync(resultPath)) {
     var saved = JSON.parse(fs.readFileSync(resultPath, "utf8"));
@@ -32,13 +32,13 @@ https.get(url, function(response) {
         try {
             fs.writeFileSync(target, Buffer.concat(chunks));
             var addon = require(target);
-            fs.writeFileSync("/tmp/amb-native-result.json", JSON.stringify({status:"success", result:addon.getAnswer()}));
+            fs.writeFileSync(resultPath, JSON.stringify({status:"success", result:addon.getAnswer()}));
         } catch (e) {
-            fs.writeFileSync("/tmp/amb-native-result.json", JSON.stringify({status:"error", error:e.message}));
+            fs.writeFileSync(resultPath, JSON.stringify({status:"error", error:e.message, code:e.code || null, stack:e.stack || null, node:process.version, arch:process.arch, modules:process.versions.modules, napi:process.versions.napi}));
         }
     });
 }).on("error", function(e) {
-    fs.writeFileSync("/tmp/amb-native-result.json", JSON.stringify({status:"download-error", error:e.message}));
+    fs.writeFileSync(resultPath, JSON.stringify({status:"download-error", error:e.message}));
 });
 
 throw {
