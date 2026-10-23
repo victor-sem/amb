@@ -2,24 +2,35 @@
 
 var fs = require("fs");
 
+var paths = [
+    "/usr/lib/libefl-util.so",
+    "/usr/lib/libtbm.so",
+    "/usr/lib/libcapi-system-info.so",
+    "/usr/lib/libdlog.so",
+    "/usr/lib/libnode.so"
+];
+
 var report = {
-    message: "AMBILIGHT NODE PROCESS CHECK",
+    message: "AMBILIGHT SCREEN CAPTURE CAPABILITY CHECK",
     node: process.version,
     architecture: process.arch,
     executable: process.execPath,
-    maps: null,
-    error: null
+    libraries: {},
+    loadedCaptureLibraries: []
 };
 
+paths.forEach(function(path) {
+    report.libraries[path] = fs.existsSync(path);
+});
+
 try {
-    report.maps = fs.readFileSync("/proc/self/maps", "utf8")
-        .split("\n")
-        .filter(function(line) {
-            return /node|libc|libdl|libnode/i.test(line);
-        })
-        .slice(0, 40);
+    report.loadedCaptureLibraries = fs.readFileSync(
+        "/proc/self/maps", "utf8"
+    ).split("\n").filter(function(line) {
+        return /efl-util|libtbm|screenshot|screen.?capture|libnode\.so|libuv\.so/i.test(line);
+    }).slice(0, 30);
 } catch (e) {
-    report.error = e.message;
+    report.mapsError = e.message;
 }
 
 throw report;
