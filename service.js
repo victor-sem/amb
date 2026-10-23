@@ -1,26 +1,11 @@
 "use strict";
 
-var modules = [
-  "ffi-napi",
-  "ffi",
-  "ref-napi",
-  "bindings",
-  "node-gyp",
-  "process"
-];
-
-var results = modules.map(function(name) {
-  try {
-    var resolved = require.resolve(name);
-    return {module: name, available: true, path: resolved};
-  } catch (e) {
-    return {module: name, available: false, error: e.code || e.message};
-  }
-});
-
 throw {
-  message: "AMBILIGHT NATIVE BRIDGE CHECK",
+  message: "AMBILIGHT NATIVE LOADER CHECK",
   nodeVersion: process.version,
   architecture: process.arch,
-  results: results
+  dlopenAvailable: typeof process.dlopen === "function",
+  moduleLoadAvailable: typeof require("module")._extensions[".node"] === "function",
+  moduleAbi: process.versions.modules,
+  napiVersion: process.versions.napi || null
 };
