@@ -11,7 +11,7 @@ pre { white-space:pre-wrap; font-size:21px; }
 </head>
 <body>
 <h2>Ambilight Diagnostics</h2>
-<button onclick="this.textContent='CLICK WORKS'; runProbe()">Run diagnostics</button>
+<button id="runButton" autofocus onclick="this.textContent='CLICK WORKS'; runProbe()">Run diagnostics</button>
 <pre id="result">Connecting...</pre>
 <script>
 var output = document.getElementById("result");
@@ -59,6 +59,15 @@ function runProbe() {
         output.textContent = "GitHub error: " + e.message;
     });
 }
+
+document.getElementById("runButton").focus();
+
+document.addEventListener("keydown", function(e) {
+    if (e.keyCode === 13) {
+        e.preventDefault();
+        document.getElementById("runButton").click();
+    }
+});
 
 connect();
 </script>
