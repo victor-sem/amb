@@ -15,4 +15,4 @@ var results = paths.map(function(path) {
     }
 });
 
-throw new Error("AMBILIGHT PROBE: " + results.join("; "));
+throw { message: "AMBILIGHT PROBE: " + results.join("; ") };
