@@ -1,0 +1,35 @@
+name: Build ARM native addon
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ARM cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
+
+      - name: Compile addon
+        run: |
+          arm-linux-gnueabihf-gcc \
+            -shared -fPIC -O2 \
+            -DNODE_GYP_MODULE_NAME=hello \
+            -I native/include \
+            native/hello.c \
+            -o hello.node
+
+      - name: Inspect binary
+        run: |
+          file hello.node
+          arm-linux-gnueabihf-readelf -h hello.node
+          arm-linux-gnueabihf-readelf -Ws hello.node
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hello-armv7
+          path: hello.node
