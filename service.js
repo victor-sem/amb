@@ -1,36 +1,23 @@
 "use strict";
 
 var fs = require("fs");
-var path = "/usr/lib/libvideoenhance.so";
+var dirs = ["/usr/lib", "/usr/lib64", "/lib"];
+var pattern = /video|display|screen|capture|pixel|color|picture|frame|render|graphics|mali|drm/i;
 
-var symbols = [
-    "cs_ve_get_rgb_measure_condition",
-    "cs_ve_set_rgb_measure_position",
-    "cs_ve_get_rgb_measure_pixel"
-];
-
-try {
-    var stat = fs.statSync(path);
-    var data = fs.readFileSync(path);
-
-    throw {
-        message: "AMBILIGHT RGB SYMBOL CHECK",
-        librarySize: stat.size,
-        results: symbols.map(function(name) {
-            return {
-                symbol: name,
-                found: data.indexOf(Buffer.from(name)) !== -1
-            };
-        })
-    };
-} catch (e) {
-    if (e.message === "AMBILIGHT RGB SYMBOL CHECK") {
-        throw e;
+var results = dirs.map(function(dir) {
+    try {
+        return {
+            directory: dir,
+            libraries: fs.readdirSync(dir)
+                .filter(function(name) { return pattern.test(name); })
+                .slice(0, 100)
+        };
+    } catch (e) {
+        return { directory: dir, error: e.code || e.message };
     }
+});
 
-    throw {
-        message: "LIBRARY READ ERROR",
-        code: e.code || null,
-        error: String(e.message || e)
-    };
-}
+throw {
+    message: "AMBILIGHT VIDEO LIBRARY DISCOVERY",
+    results: results
+};
