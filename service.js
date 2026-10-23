@@ -1,18 +1,12 @@
 "use strict";
 
-var fs = require("fs");
-var paths = [
-    "/usr/lib/libvideoenhance.so",
-    "/usr/lib64/libvideoenhance.so"
-];
+var os = require("os");
 
-var results = paths.map(function(path) {
-    try {
-        fs.statSync(path);
-        return path + " = FOUND";
-    } catch (e) {
-        return path + " = " + e.code;
-    }
-});
-
-throw { message: "AMBILIGHT PROBE: " + results.join("; ") };
+throw {
+    message: "AMBILIGHT SYSTEM INFO",
+    architecture: process.arch,
+    platform: process.platform,
+    nodeVersion: process.version,
+    osArchitecture: os.arch(),
+    libraryFound: require("fs").existsSync("/usr/lib/libvideoenhance.so")
+};
