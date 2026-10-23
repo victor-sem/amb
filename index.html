@@ -29,7 +29,23 @@ function connect() {
     ws.onmessage = function(event) {
         var data = JSON.parse(event.data);
         if (data.type === 7) {
-            output.textContent = JSON.stringify(data.payload, null, 2);
+            var results = data.payload || [];
+            var latest = results.filter(function(item) {
+                return item.name &&
+                    item.name.indexOf("gh/victor-sem/amb@") === 0;
+            }).pop();
+
+            if (!latest) {
+                output.textContent = "No diagnostics result yet";
+                return;
+            }
+
+            var result = latest.error || {};
+            output.textContent =
+                "LATEST DIAGNOSTICS\\n" +
+                "Module: " + latest.name + "\\n\\n" +
+                JSON.stringify(result, null, 2);
+            window.scrollTo(0, 0);
         }
     };
 
